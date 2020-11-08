@@ -1,5 +1,5 @@
 # zipcode-timezone-php
- A utility class to convert US ZIP codes to 'tz' timezone strings.
+ An overbuilt utility class to convert US ZIP codes to 'tz' timezone strings.
 
 ### Example:
 ```php
@@ -21,6 +21,7 @@ echo \Angorb\ZipCodeTimezone\TimezoneForZip::get(10001); // prints 'America/New_
 ### Compressed File Security:
 **MD5:** *c4fc51c364cf39c509eba37df01aeb0d*
 To verify the gz compressed database matches the plaintext database in the distribution: ``$ php -f tests/compressed_datafile_integrity_check.php``
+
 **Passed:**
 ```
 Uncompressed Checksum:  c4fc51c364cf39c509eba37df01aeb0d    Path: /Users/angorb/Sites/zipcode-timezone-php/data/ziptzdb.json
