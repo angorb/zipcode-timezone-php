@@ -4,8 +4,10 @@ namespace Angorb\ZipCodeTimezone;
 
 class Timezone
 {
-    const DATA_FILE = __DIR__ . "/../data/ziptzdb.json";
-    const COMPRESSED_DATA_FILE = __DIR__ . "/../data/ziptzdb.json.gz";
+
+    const FORMAT_JSON = 0;
+    const FORMAT_GZIP = 1;
+    const FORMAT_MSGPACK = 2;
 
     private $map;
     private static $timezones = [
@@ -25,23 +27,45 @@ class Timezone
         "America/Adak",
     ];
 
-    public function __construct(bool $compressed = false)
+    protected static $database = [
+        0 => __DIR__ . "/../data/ziptzdb.json",
+        1 => __DIR__ . "/../data/ziptzdb.json.gz",
+        2 => __DIR__ . "/../data/ziptzdb.msgpack"
+    ];
+
+    public function __construct(int $format)
     {
         require_once __DIR__ . "/FileNotFoundException.php";
 
-        $file = self::DATA_FILE;
-        if ($compressed) {
-            $file = self::COMPRESSED_DATA_FILE;
-        }
+        $this->file = self::$database[$format];
 
-        if (!\file_exists($file)) {
+        if (!\file_exists($this->file)) {
             throw new FileNotFoundException("Could not find zip code map data file at '{$file}'");
         }
 
-        $data = $compressed ? \gzuncompress(\file_get_contents($file)) : \file_get_contents($file);
+        switch ($format) {
+            case 0:
+                $this->loadJson();
+                break;
+            case 1:
+                $this->loadJson(true);
+                break;
+            case 2:
+                $this->loadMsgPack();
+                break;
+        }
+    }
+
+    private function loadJson(bool $compressed = false)
+    {
+        $data = $compressed ? \gzuncompress(\file_get_contents($this->file)) : \file_get_contents($this->file);
 
         $this->map = \json_decode($data, \true);
+    }
 
+    private function loadMsgPack()
+    {
+        $this->map = msgpack_unpack(\file_get_contents($this->file));
     }
 
     public function getForZipCode(string $zip)

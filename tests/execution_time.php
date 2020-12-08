@@ -1,9 +1,10 @@
 <?php
+require_once __DIR__ . "/../src/Timezone.php";
+require_once __DIR__ . "/../src/TimezoneForZip.php";
+require_once __DIR__ . "/../src/FileNotFoundException.php";
 
 use Angorb\ZipCodeTimezone\Timezone;
 use Angorb\ZipCodeTimezone\TimezoneForZip;
-
-require_once __DIR__ . "/../src/Timezone.php";
 
 $exampleZipCodes = [
     "Denver, CO" => 80204,
@@ -15,16 +16,20 @@ $exampleZipCodes = [
     "Chicago, IL" => '60611',
 ];
 
-$tzInstance = new Timezone();
-$compressedInstance = new Timezone(\true);
+$tzInstance = new Timezone(Timezone::FORMAT_JSON);
+$compressedInstance = new Timezone(Timezone::FORMAT_GZIP);
+$msgpackInstance = new Timezone(Timezone::FORMAT_MSGPACK);
 
 $testFunctions = [
     'new_object_instance_method' => null,
     'new_object_instance_method_with_compression' => null,
+    'new_object_msgpack' => null,
     'reused_object_instance_method' => $tzInstance,
     'reused_object_instance_method_with_compression' => $compressedInstance,
+    'reused_object_msgpack' => $msgpackInstance,
     'static_method' => null,
     'static_method_with_compression' => null,
+    'static_method_with_msgpack' => null,
 ];
 
 foreach ($testFunctions as $test => $object) {
@@ -34,7 +39,6 @@ foreach ($testFunctions as $test => $object) {
         }
         $results[$zip][$test] = runTest($zip, $test, $object);
     }
-
 }
 
 foreach ($results as $zip => $data) {
@@ -54,7 +58,6 @@ foreach ($results as $zip => $data) {
             $results[1],
             $pctOfTotal,
         );
-
     }
     printf("\tResult: %s\n", $results[0]);
 }
@@ -69,12 +72,17 @@ function runTest($zip, $testFunction, &$object = null)
 
 function new_object_instance_method($zip)
 {
-    return (new Timezone())->getForZipCode($zip);
+    return (new Timezone(Timezone::FORMAT_JSON))->getForZipCode($zip);
 }
 
 function new_object_instance_method_with_compression($zip)
 {
-    return (new Timezone(true))->getForZipCode($zip);
+    return (new Timezone(Timezone::FORMAT_GZIP))->getForZipCode($zip);
+}
+
+function new_object_msgpack($zip)
+{
+    return (new Timezone(Timezone::FORMAT_MSGPACK))->getForZipCode($zip);
 }
 
 function reused_object_instance_method($zip, &$object)
@@ -87,6 +95,11 @@ function reused_object_instance_method_with_compression($zip, &$object)
     return $object->getForZipCode($zip);
 }
 
+function reused_object_msgpack($zip, &$object)
+{
+    return $object->getForZipCode($zip);
+}
+
 function static_method($zip)
 {
     return TimezoneForZip::get($zip);
@@ -94,5 +107,10 @@ function static_method($zip)
 
 function static_method_with_compression($zip)
 {
-    return TimezoneForZip::get($zip, \true);
+    return TimezoneForZip::get($zip, Timezone::FORMAT_GZIP);
+}
+
+function static_method_with_msgpack($zip)
+{
+    return TimezoneForZip::get($zip, Timezone::FORMAT_MSGPACK);
 }
